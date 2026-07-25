@@ -215,16 +215,71 @@ def remove_invoice(invoice_id):
     print(f"Invoice (id:{invoice_id}) has been removed")
 
 def edit_invoice(invoice_code, issue_date=None, due_date=None):
-    command = ''
+    updates = []
+    params = []
+
     if issue_date is not None:
-        command = f'issue_date = {issue_date}'
+        updates.append("issue_date = ?")
+        params.append(issue_date.isoformat())
+
     if due_date is not None:
-        command = f'due_date = {due_date}'
+        updates.append("due_date = ?")
+        params.append(due_date.isoformat())
+
+    if not updates:
+        print("Nothing to update")
+        return
+
+    params.append(invoice_code)
+
     conn = sqlite3.connect("invoices.db")
     cursor = conn.cursor()
-    cursor.execute("UPDATE invoices SET command WHERE code = ?", (invoice_code,))
-    pass
+    cursor.execute(f"""
+        UPDATE invoices
+        SET {', '.join(updates)}
+        WHERE code = ?
+    """, params)
+    conn.commit()
+    conn.close()
+    print(f"Invoice {invoice_code} updated")
 
+def edit_invoice_item(item_id, item_date=None, description=None, quantity=None, rate=None):
+    updates = []
+    params = []
+
+    if item_date is not None:
+        updates.append("item_date = ?")
+        params.append(item_date.isoformat())
+
+    if description is not None:
+        updates.append("description = ?")
+        params.append(description)
+    
+    if quantity is not None:
+        updates.append("quantity = ?")
+        params.append(quantity)
+
+    if rate is not None:
+        updates.append("rate = ?")
+        params.append(rate)
+  
+    if not updates:
+        print("Nothing to update")
+        return
+
+    params.append(item_id)
+
+    conn = sqlite3.connect("invoices.db")
+    cursor = conn.cursor()
+    cursor.execute(f"""
+        UPDATE invoice_items
+        SET {', '.join(updates)}
+        WHERE id = ?
+    """, params)
+    conn.commit()
+    conn.close()
+    print(f"Invoice {item_id} updated")
+          
 def show_all_invoices():
     conn = sqlite3.connect("invoices.db")
     cursor = conn.cursor()

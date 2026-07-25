@@ -1,7 +1,7 @@
 from datetime import date, timedelta, datetime 
 import argparse
 from database_functions import create_tables, add_client, add_invoice_with_items, \
-remove_client, void_invoice, mark_paid, show_clients, show_all_invoices, show_unpaid_invoices, \
+remove_client, void_invoice, edit_invoice, edit_invoice_item, mark_paid, show_clients, show_all_invoices, show_unpaid_invoices, \
 backup_database, show_invoice_items, total_unpaid, export_csv, remove_invoice
 from pdf_generator import generate_invoice_pdf
 
@@ -34,9 +34,24 @@ p.add_argument("--no-pdf", action="store_true")
 #remove-invoice
 p=subparsers.add_parser("remove-invoice")
 p.add_argument("--invoice-code", required=True)
+
 #void-invoice
 p=subparsers.add_parser("void-invoice")
 p.add_argument("--invoice-code", required=True)
+
+#edit-invoice
+p=subparsers.add_parser("edit-invoice")
+p.add_argument("--invoice-code", required=True)
+p.add_argument("--issue-date", type=date.fromisoformat)
+p.add_argument("--due-date", type=date.fromisoformat)
+
+#edit-invoice-item
+p=subparsers.add_parser("edit-invoice-item")
+p.add_argument("--item--id", type=int, required=True)
+p.add_argument("--item-date", type=date.fromisoformat)
+p.add_argument("--description", type=str)
+p.add_argument("--quantity", type=float)
+p.add_argument("--rate", type=float)
 
 #show-all-invoices
 # eventually change to show invoices and filter based on client/s, dates, etc
@@ -103,6 +118,12 @@ elif args.command == "remove-invoice":
 
 elif args.command == "void-invoice":
     void_invoice(args.invoice_code)
+
+elif args.command == "edit-invoice":
+    edit_invoice(invoice_code=args.invoice_code, issue_date=args.issue_date, due_date=args.due_date)
+
+elif args.command == "edit-invoice-item":
+    edit_invoice_item(item_id=args.item_id, item_date=args.item_id, description=args.description, quantity=args.quantity, rate=args.rate)
 
 elif args.command == "show-all-invoices":
     show_all_invoices()
