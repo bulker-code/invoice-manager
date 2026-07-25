@@ -15,14 +15,13 @@ def update_count():
     """)
     conn.commit()
     conn.close()
-update_count()
+
 def alter_table():
     conn=sqlite3.connect("invoices.db")
     cursor = conn.cursor()
     cursor.execute("ALTER TABLE invoices ADD COLUMN voided TEXT NOT NULL DEFAULT 0")
     conn.commit()
     conn.close()
-
 
 
 def create_tables():
@@ -215,7 +214,15 @@ def remove_invoice(invoice_id):
     conn.close()
     print(f"Invoice (id:{invoice_id}) has been removed")
 
-def edit_invoice(invoice_code):
+def edit_invoice(invoice_code, issue_date=None, due_date=None):
+    command = ''
+    if issue_date is not None:
+        command = f'issue_date = {issue_date}'
+    if due_date is not None:
+        command = f'due_date = {due_date}'
+    conn = sqlite3.connect("invoices.db")
+    cursor = conn.cursor()
+    cursor.execute("UPDATE invoices SET command WHERE code = ?", (invoice_code,))
     pass
 
 def show_all_invoices():
@@ -260,7 +267,7 @@ def show_invoice_items(invoice_code):
     conn = sqlite3.connect("invoices.db")
     cursor = conn.cursor()
     cursor.execute("""
-    SELECT invoices.id, invoices.code, clients.name, invoices.due_date, invoice_items.description, invoice_items.quantity, invoice_items.rate, (invoice_items.quantity * invoice_items.rate) as subtotal
+    SELECT invoices.id, invoices.code, invoice_items.id, clients.name, invoices.due_date, invoice_items.description, invoice_items.quantity, invoice_items.rate, (invoice_items.quantity * invoice_items.rate) as subtotal
     FROM invoices
     JOIN clients ON clients.id = invoices.client_id
     JOIN invoice_items ON invoice_items.invoice_id = invoices.id
@@ -270,7 +277,7 @@ def show_invoice_items(invoice_code):
     rows = cursor.fetchall()
     conn.commit()
     conn.close()
-    headers = ["ID", "Invoice CODE", "Client Name", "Invoice Due Date", "Item Description", "Quantity", "Rate", "SUBTOTAL"]
+    headers = ["ID", "Invoice CODE", "Item ID", "Client Name", "Invoice Due Date", "Item Description", "Quantity", "Rate", "SUBTOTAL"]
     print(tabulate.tabulate(rows, headers=headers, tablefmt="grid"))
 
 def mark_paid(invoice_code, paid_date):
