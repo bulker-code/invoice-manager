@@ -33,7 +33,7 @@ p.add_argument("--no-pdf", action="store_true")
 
 #remove-invoice
 p=subparsers.add_parser("remove-invoice")
-p.add_argument("--invoice-code", required=True)
+p.add_argument("--invoice-id", required=True)
 
 #void-invoice
 p=subparsers.add_parser("void-invoice")
@@ -47,7 +47,7 @@ p.add_argument("--due-date", type=date.fromisoformat)
 
 #edit-invoice-item
 p=subparsers.add_parser("edit-invoice-item")
-p.add_argument("--item--id", type=int, required=True)
+p.add_argument("--item-id", type=int, required=True)
 p.add_argument("--item-date", type=date.fromisoformat)
 p.add_argument("--description", type=str)
 p.add_argument("--quantity", type=float)
@@ -114,7 +114,7 @@ elif args.command == "add-invoice-with-items":
         generate_invoice_pdf(invoice_code)
 
 elif args.command == "remove-invoice":
-    remove_invoice(args.invoice_code)
+    remove_invoice(args.invoice_id)
 
 elif args.command == "void-invoice":
     void_invoice(args.invoice_code)
@@ -123,7 +123,7 @@ elif args.command == "edit-invoice":
     edit_invoice(invoice_code=args.invoice_code, issue_date=args.issue_date, due_date=args.due_date)
 
 elif args.command == "edit-invoice-item":
-    edit_invoice_item(item_id=args.item_id, item_date=args.item_id, description=args.description, quantity=args.quantity, rate=args.rate)
+    edit_invoice_item(item_id=args.item_id, item_date=args.item_date, description=args.description, quantity=args.quantity, rate=args.rate)
 
 elif args.command == "show-all-invoices":
     show_all_invoices()

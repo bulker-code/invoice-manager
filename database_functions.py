@@ -357,7 +357,7 @@ def total_unpaid(client_id):
     FROM invoices
     JOIN invoice_items ON invoice_items.invoice_id = invoices.id
     JOIN clients ON clients.id = invoices.client_id
-    WHERE invoices.paid = 0 and invoices.client_id = ?
+    WHERE invoices.paid = 0 AND invoices.voided = 0 AND invoices.client_id = ?
     """, (client_id,))
     result = cursor.fetchone()[0]
     total_unpaid = result if result is not None else 0
@@ -386,7 +386,7 @@ def backup_database():
     print(f"Backed up to {backup_name}")
 
 def export_csv(issue_from=None, issue_to=None, paid_from=None, paid_to=None, paid_only=False, unpaid_only=False, client_id=None):
-    conditions = []
+    conditions = ['invoices.voided = 0']
     params = []
 
     if paid_only:
@@ -415,11 +415,10 @@ def export_csv(issue_from=None, issue_to=None, paid_from=None, paid_to=None, pai
     conn = sqlite3.connect("invoices.db")
     cursor = conn.cursor()
     cursor.execute(f"""
-        SELECT invoices.code, clients.name, clients.email, invoices.issue_date, SUM(invoice_items.quantity * invoice_items.rate) AS total, invoices.paid, invoices.paid_date
+        SELECT invoices.code, clients.name, clients.email, invoices.issue_date, invoices.due_date, SUM(invoice_items.quantity * invoice_items.rate) AS total, invoices.paid, invoices.paid_date
         FROM invoices
         JOIN clients ON invoices.client_id = clients.id
         JOIN invoice_items ON invoice_items.invoice_id = invoices.id
-        WHERE invoices.voided = 0
         {where_clause}
         GROUP BY invoices.id
         ORDER BY invoices.due_date
@@ -431,8 +430,7 @@ def export_csv(issue_from=None, issue_to=None, paid_from=None, paid_to=None, pai
         with open(export_name, "w", newline="", encoding="utf-8") as csv_file:
             writer = csv.writer(csv_file)
     
-            # 4. Extract and write column headers dynamically
-            headers = ['Code', 'Name', 'Email', 'Issue Date', 'Amount', 'Paid', "Paid Date"] 
+            headers = ['Code', 'Name', 'Email', 'Issue Date', 'Due Date', 'Amount', 'Paid', "Paid Date"] 
             writer.writerow(headers)
 
             # 5. Write all the data rows
