@@ -61,6 +61,7 @@ python invoice_cli.py show-clients
 python invoice_cli.py add-invoice-with-items --client-id 1 --issue-date 2026-07-09
 python invoice_cli.py add-invoice-with-items --client-id 1 --issue-date 2026-07-09 --no-pdf
 ```
+<img width="2000" height="2588" alt="image" src="https://github.com/user-attachments/assets/f26f447d-9dc1-4e67-b0a5-d8657bec1f89" />
 
 **remove-invoice** - Removes invoice by code
 
