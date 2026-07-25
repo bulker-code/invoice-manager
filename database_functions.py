@@ -184,6 +184,8 @@ def show_all_invoices():
     """
     )
     rows = cursor.fetchall()
+    conn.commit()
+    conn.close()
     headers = ["ID", "INV Code", "Client Name", "Issue Date", "TOTAL", "Paid", "Paid_Date"]
     print(tabulate.tabulate(rows, headers=headers, tablefmt="grid"))
 
@@ -201,8 +203,9 @@ def show_unpaid_invoices():
     """
     )
     rows = cursor.fetchall()
-    headers = ["ID", "CODE", "Client Name", "Due Date", "TOTAL"
-    ]
+    conn.commit()
+    conn.close()
+    headers = ["ID", "CODE", "Client Name", "Due Date", "TOTAL"]
     print(tabulate.tabulate(rows, headers=headers, tablefmt='grid'))
 
 def show_invoice_items(invoice_code):
@@ -217,6 +220,8 @@ def show_invoice_items(invoice_code):
     """, (invoice_code,))
 
     rows = cursor.fetchall()
+    conn.commit()
+    conn.close()
     headers = ["ID", "Invoice CODE", "Client Name", "Invoice Due Date", "Item Description", "Quantity", "Rate", "SUBTOTAL"]
     print(tabulate.tabulate(rows, headers=headers, tablefmt="grid"))
 
@@ -249,22 +254,6 @@ def total_unpaid(client_id):
     conn.commit()
     conn.close()
     print(f"Total of unpaid invoices for client {client_id} ({client_name}) is: ${total_unpaid}")
-
-def calculate_revenue(from_date, to_date):
-    conn = sqlite3.connect("invoices.db")
-    cursor = conn.cursor()
-
-    cursor.execute("""
-    SELECT SUM(invoice_items.quantity * invoice_items.rate) AS total_revenue
-    FROM invoices
-    JOIN invoice_items ON invoice_items.invoice_id = invoices.id
-    WHERE invoices.paid = 1
-    AND invoices.paid_date BETWEEN ? AND ?
-    """, (from_date, to_date))
-    
-    total = cursor.fetchone()[0]
-    conn.close
-    print(f' The revenue from {from_date} to {to_date} is ${total}')
 
 def get_invoice_data(invoice_code):
     conn =sqlite3.connect("invoices.db")
@@ -344,6 +333,3 @@ def export_csv(issue_from=None, issue_to=None, paid_from=None, paid_to=None, pai
         print(f"{export_name} is open in another program — close it and try again.")
     conn.commit()
     conn.close()
-    
-
-    

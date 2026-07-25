@@ -113,9 +113,6 @@ elif args.command == "mark-paid":
 elif args.command == "total-unpaid":
     total_unpaid(args.client_id)
 
-elif args.command == "calculate-revenue":
-    calculate_revenue(args.from_date.isoformat(), args.to_date.isoformat())
-
 elif args.command == "generate-pdf":
     generate_invoice_pdf(args.invoice_code)
 
