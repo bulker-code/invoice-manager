@@ -4,6 +4,27 @@ import tabulate
 import shutil
 from datetime import date
 
+def update_count():
+    conn=sqlite3.connect("invoices.db")
+    cursor = conn.cursor()
+    cursor.execute("""
+        UPDATE clients
+        SET invoice_count = (
+            SELECT COUNT(*) FROM invoices WHERE invoices.client_id = clients.id
+        )
+    """)
+    conn.commit()
+    conn.close()
+update_count()
+def alter_table():
+    conn=sqlite3.connect("invoices.db")
+    cursor = conn.cursor()
+    cursor.execute("ALTER TABLE invoices ADD COLUMN voided TEXT NOT NULL DEFAULT 0")
+    conn.commit()
+    conn.close()
+
+
+
 def create_tables():
     conn = sqlite3.connect("invoices.db")
     cursor = conn.cursor()
@@ -13,18 +34,20 @@ def create_tables():
             name TEXT NOT NULL,
             email TEXT NOT NULL UNIQUE,
             phone TEXT NOT NULL,
-            address TEXT NOT NULL
+            address TEXT NOT NULL,
+            invoice_count INTEGER NOT NULL DEFAULT 0
         )
     """)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS invoices (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             client_id INTEGER NOT NULL,
-            code TEXT,
+            code TEXT UNIQUE,
             issue_date TEXT NOT NULL,
             due_date TEXT NOT NULL,
             paid INTEGER NOT NULL DEFAULT 0,
             paid_date TEXT,
+            voided TEXT NOT NULL DEFAULT 0,
             FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE
         )
     """)
@@ -44,7 +67,20 @@ def create_tables():
     conn.commit()
     conn.close()
 
+def generate_invoice_code(cursor, client_id, invoice_id):
+    cursor.execute("SELECT name, invoice_count from clients WHERE id = ?", (client_id,))
+    name, count = cursor.fetchone()
+    parts = name.split()
+    initials = (parts[0][0] + parts[-1][0]).upper()
 
+    new_count = count + 1
+    code = f"{str(new_count).zfill(3)}{initials}"
+
+    cursor.execute("UPDATE clients SET invoice_count = ? WHERE id = ?", (new_count, client_id))
+    cursor.execute("UPDATE invoices SET code = ? WHERE id = ?", (code, invoice_id))
+
+    
+    
 def update_invoice_codes(cursor, client_id):
     # get client initials
     cursor.execute("SELECT name FROM clients WHERE id = ?", (client_id,))
@@ -111,10 +147,10 @@ def remove_client(client_id):
 def show_clients():
     conn = sqlite3.connect("invoices.db")
     cursor = conn.cursor()
-    cursor.execute("SELECT id, name, email, phone, address FROM clients ORDER BY id")
+    cursor.execute("SELECT id, name, email, phone, address, invoice_count FROM clients ORDER BY id")
     rows = cursor.fetchall()
 
-    headers = ["ID", "Name", "Email", "Phone", "Address"]
+    headers = ["ID", "Name", "Email", "Phone", "Address", "Inv Count"]
     print(tabulate.tabulate(rows, headers=headers, tablefmt="grid"))
 
 def add_invoice_with_items(client_id, issue_date, due_date):
@@ -148,7 +184,7 @@ def add_invoice_with_items(client_id, issue_date, due_date):
         print("No items entered - invoice cancelled, nothing saved")
         return
     
-    update_invoice_codes(cursor, client_id)
+    generate_invoice_code(cursor, client_id, invoice_id)
     
     cursor.execute("SELECT code from invoices WHERE id = ?", (invoice_id,))
     inv_code = cursor.fetchone()[0]
@@ -159,26 +195,38 @@ def add_invoice_with_items(client_id, issue_date, due_date):
     print(f"Created invoice. id:{invoice_id}, code: {inv_code} ")
     return inv_code
 
-def remove_invoice(invoice_code):
+def void_invoice(invoice_code):
+    conn = sqlite3.connect("invoices.db")
+    cursor = conn.cursor()
+    cursor.execute("UPDATE invoices SET voided = 1 WHERE code = ?", (invoice_code,))
+    conn.commit()
+    conn.close()
+    print(f"Invoice {invoice_code} has been voided")
+
+def remove_invoice(invoice_id):
     conn = sqlite3.connect("invoices.db")
     cursor = conn.cursor()
     cursor.execute("PRAGMA foreign_keys = ON")
     cursor.execute("""
     DELETE from invoices
-    WHERE invoices.code = ?
-    """, (invoice_code,))
+    WHERE invoices.id = ?
+    """, (invoice_id,))
     conn.commit()
     conn.close()
-    print(f"Invoice {invoice_code} has been removed")
+    print(f"Invoice (id:{invoice_id}) has been removed")
+
+def edit_invoice(invoice_code):
+    pass
 
 def show_all_invoices():
     conn = sqlite3.connect("invoices.db")
     cursor = conn.cursor()
     cursor.execute("""
-    SELECT invoices.id, invoices.code, clients.name, invoices.issue_date, SUM(invoice_items.quantity * invoice_items.rate) AS total, invoices.paid, invoices.paid_date
+    SELECT invoices.id, invoices.code, clients.name, invoices.issue_date, SUM(invoice_items.quantity * invoice_items.rate) AS total, invoices.paid, invoices.paid_date, invoices.voided
     FROM invoices
     JOIN clients ON invoices.client_id = clients.id
     JOIN invoice_items ON invoice_items.invoice_id = invoices.id
+    WHERE invoices.voided = 0
     GROUP BY invoices.id
     ORDER BY invoices.due_date
     """
@@ -186,7 +234,7 @@ def show_all_invoices():
     rows = cursor.fetchall()
     conn.commit()
     conn.close()
-    headers = ["ID", "INV Code", "Client Name", "Issue Date", "TOTAL", "Paid", "Paid_Date"]
+    headers = ["ID", "INV Code", "Client Name", "Issue Date", "TOTAL", "Paid", "Paid_Date", "voided"]
     print(tabulate.tabulate(rows, headers=headers, tablefmt="grid"))
 
 def show_unpaid_invoices():
@@ -197,7 +245,7 @@ def show_unpaid_invoices():
     FROM invoices
     JOIN clients ON invoices.client_id = clients.id
     JOIN invoice_items ON invoice_items.invoice_id = invoices.id
-    WHERE invoices.paid = 0
+    WHERE invoices.paid = 0 AND invoices.voided = 0
     GROUP BY invoices.id
     ORDER BY invoices.due_date
     """
@@ -309,6 +357,7 @@ def export_csv(issue_from=None, issue_to=None, paid_from=None, paid_to=None, pai
         FROM invoices
         JOIN clients ON invoices.client_id = clients.id
         JOIN invoice_items ON invoice_items.invoice_id = invoices.id
+        WHERE invoices.voided = 0
         {where_clause}
         GROUP BY invoices.id
         ORDER BY invoices.due_date

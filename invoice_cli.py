@@ -1,8 +1,8 @@
 from datetime import date, timedelta, datetime 
 import argparse
 from database_functions import create_tables, add_client, add_invoice_with_items, \
-remove_client, remove_invoice, mark_paid, show_clients, show_all_invoices, show_unpaid_invoices, \
-backup_database, show_invoice_items, calculate_revenue, total_unpaid, export_csv
+remove_client, void_invoice, mark_paid, show_clients, show_all_invoices, show_unpaid_invoices, \
+backup_database, show_invoice_items, total_unpaid, export_csv, remove_invoice
 from pdf_generator import generate_invoice_pdf
 
 if __name__ == "__main__":
@@ -33,6 +33,9 @@ p.add_argument("--no-pdf", action="store_true")
 
 #remove-invoice
 p=subparsers.add_parser("remove-invoice")
+p.add_argument("--invoice-code", required=True)
+#void-invoice
+p=subparsers.add_parser("void-invoice")
 p.add_argument("--invoice-code", required=True)
 
 #show-all-invoices
@@ -97,6 +100,9 @@ elif args.command == "add-invoice-with-items":
 
 elif args.command == "remove-invoice":
     remove_invoice(args.invoice_code)
+
+elif args.command == "void-invoice":
+    void_invoice(args.invoice_code)
 
 elif args.command == "show-all-invoices":
     show_all_invoices()
