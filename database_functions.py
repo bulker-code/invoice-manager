@@ -244,7 +244,8 @@ def total_unpaid(client_id):
     JOIN clients ON clients.id = invoices.client_id
     WHERE invoices.paid = 0 and invoices.client_id = ?
     """, (client_id,))
-    total_unpaid = cursor.fetchone()[0] if cursor.fetchone()[0] is not None else 0
+    result = cursor.fetchone()[0]
+    total_unpaid = result if result is not None else 0
     conn.commit()
     conn.close()
     print(f"Total of unpaid invoices for client {client_id} ({client_name}) is: ${total_unpaid}")
