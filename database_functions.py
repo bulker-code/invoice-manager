@@ -234,19 +234,19 @@ def mark_paid(invoice_code, paid_date):
 def total_unpaid(client_id):
     conn = sqlite3.connect("invoices.db")
     cursor = conn.cursor()
+    cursor.execute("SELECT clients.name from clients where clients.id = ?", (client_id,))
+    client_name = cursor.fetchone()[0]
 
     cursor.execute("""
-    SELECT clients.name, SUM(invoice_items.quantity * invoice_items.rate) AS total_revenue
+    SELECT SUM(invoice_items.quantity * invoice_items.rate) AS total_revenue
     FROM invoices
     JOIN invoice_items ON invoice_items.invoice_id = invoices.id
     JOIN clients ON clients.id = invoices.client_id
     WHERE invoices.paid = 0 and invoices.client_id = ?
     """, (client_id,))
-    
-    details = cursor.fetchone()
-    client_name = details[0]
-    total_unpaid = details[1]
-    conn.close
+    total_unpaid = cursor.fetchone()[0] if cursor.fetchone()[0] is not None else 0
+    conn.commit()
+    conn.close()
     print(f"Total of unpaid invoices for client {client_id} ({client_name}) is: ${total_unpaid}")
 
 def calculate_revenue(from_date, to_date):
