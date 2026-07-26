@@ -143,6 +143,43 @@ def remove_client(client_id):
     conn.close()
     print(f" Client {client_id} has been removed")
 
+def edit_client(client_id, name=None, email=None, phone=None, address=None):
+    updates = []
+    params = []
+    if name is not None:
+        updates.append("name = ?")
+        params.append(name)
+    if email is not None:
+        updates.append("email = ?")
+        params.append(email)
+    if phone is not None:
+        updates.append("phone = ?")
+        params.append(phone)
+    if address is not None:
+        updates.append("address = ?")
+        params.append(address)
+        
+    if not updates:
+        print("Nothing to update")
+        return
+    params.append(client_id)
+
+    conn = sqlite3.connect("invoices.db")
+    cursor = conn.cursor()
+    try:
+        cursor.execute(f"""
+            UPDATE clients
+            SET {', '.join(updates)}
+            WHERE id = ?
+        """, params)
+        conn.commit()
+        print(f"Client {client_id} updated")
+    except sqlite3.IntegrityError:
+        print("A client with this email already exists")
+    conn.commit()
+    conn.close()
+
+
 def show_clients():
     conn = sqlite3.connect("invoices.db")
     cursor = conn.cursor()
@@ -299,15 +336,19 @@ def show_all_invoices():
     headers = ["ID", "INV Code", "Client Name", "Issue Date", "TOTAL", "Paid", "Paid_Date", "voided"]
     print(tabulate.tabulate(rows, headers=headers, tablefmt="grid"))
 
-def show_unpaid_invoices():
+def show_unpaid_invoices(overdue=False):
+    conditions = ["invoices.paid = 0", "invoices.voided = 0"]
+    if overdue:
+        conditions.append("invoices.due_date < date('now')")
+    where_clause = "WHERE " + " AND ".join(conditions)
     conn = sqlite3.connect("invoices.db")
     cursor = conn.cursor()
-    cursor.execute("""
+    cursor.execute(f"""
     SELECT invoices.id, invoices.code, clients.name, invoices.due_date, SUM(invoice_items.quantity * invoice_items.rate) AS total
     FROM invoices
     JOIN clients ON invoices.client_id = clients.id
     JOIN invoice_items ON invoice_items.invoice_id = invoices.id
-    WHERE invoices.paid = 0 AND invoices.voided = 0
+    {where_clause}
     GROUP BY invoices.id
     ORDER BY invoices.due_date
     """
@@ -346,18 +387,22 @@ def mark_paid(invoice_code, paid_date):
     conn.close()
     print(f"Marked invoice {invoice_code} as paid")
 
-def total_unpaid(client_id):
+def total_unpaid(client_id, overdue=False):
+    conditions = ["invoices.paid = 0", "invoices.voided = 0", "invoices.client_id = ?"]
+    if overdue:
+        conditions.append("invoices.due_date < date('now')")
+    where_clause = "WHERE " + " AND ".join(conditions)
+
     conn = sqlite3.connect("invoices.db")
     cursor = conn.cursor()
     cursor.execute("SELECT clients.name from clients where clients.id = ?", (client_id,))
     client_name = cursor.fetchone()[0]
-
-    cursor.execute("""
+    cursor.execute(f"""
     SELECT SUM(invoice_items.quantity * invoice_items.rate) AS total_revenue
     FROM invoices
     JOIN invoice_items ON invoice_items.invoice_id = invoices.id
     JOIN clients ON clients.id = invoices.client_id
-    WHERE invoices.paid = 0 AND invoices.voided = 0 AND invoices.client_id = ?
+    {where_clause}
     """, (client_id,))
     result = cursor.fetchone()[0]
     total_unpaid = result if result is not None else 0

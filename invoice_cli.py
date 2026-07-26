@@ -1,6 +1,6 @@
 from datetime import date, timedelta, datetime 
 import argparse
-from database_functions import create_tables, add_client, add_invoice_with_items, \
+from database_functions import create_tables, add_client, add_invoice_with_items, edit_client, \
 remove_client, void_invoice, edit_invoice, edit_invoice_item, mark_paid, show_clients, show_all_invoices, show_unpaid_invoices, \
 backup_database, show_invoice_items, total_unpaid, export_csv, remove_invoice
 from pdf_generator import generate_invoice_pdf
@@ -21,6 +21,14 @@ p.add_argument("--address", required=True)
 #remove-client
 p = subparsers.add_parser("remove-client")
 p.add_argument("--client-id", type=int, required=True)
+
+#edit-client
+p = subparsers.add_parser("edit-client")
+p.add_argument("--client-id", type=int, required=True)
+p.add_argument("--name")
+p.add_argument("--email")
+p.add_argument("--phone")
+p.add_argument("--address")
 
 #show-clients (no extra args needed)
 p = subparsers.add_parser("show-clients")
@@ -59,6 +67,7 @@ p = subparsers.add_parser("show-all-invoices")
 
 #show-unpaid-invoices
 p = subparsers.add_parser("show-unpaid-invoices")
+p.add_argument("--overdue", action="store_true")
 
 #show-invoice-items
 p = subparsers.add_parser("show-invoice-items")
@@ -72,11 +81,7 @@ p.add_argument("--paid-date", type=date.fromisoformat, required=True)
 #total-unpaid
 p = subparsers.add_parser("total-unpaid")
 p.add_argument("--client-id", type=int, required=True)
-
-#calculate-revenue
-p = subparsers.add_parser("calculate-revenue")
-p.add_argument("--from-date", type=date.fromisoformat, required=True)
-p.add_argument("--to-date", type=date.fromisoformat , required=True)
+p.add_argument("--overdue", action="store_true")
 
 #generate-pdf
 p = subparsers.add_parser("generate-pdf")
@@ -103,6 +108,8 @@ if args.command == "add-client":
 elif args.command == "remove-client":
     remove_client(args.client_id)
 
+elif args.command == "edit-client":
+    edit_client(args.client_id, name=args.name, email=args.email, phone=args.phone, address=args.address)
 elif args.command == "show-clients":
     show_clients()
 
@@ -129,7 +136,7 @@ elif args.command == "show-all-invoices":
     show_all_invoices()
    
 elif args.command == "show-unpaid-invoices":
-    show_unpaid_invoices()
+    show_unpaid_invoices(overdue=args.overdue)
 
 elif args.command == "show-invoice-items":
     show_invoice_items(args.invoice_code)
@@ -138,7 +145,7 @@ elif args.command == "mark-paid":
     mark_paid(args.invoice_code, args.paid_date.isoformat())
 
 elif args.command == "total-unpaid":
-    total_unpaid(args.client_id)
+    total_unpaid(args.client_id, overdue= args.overdue)
 
 elif args.command == "generate-pdf":
     generate_invoice_pdf(args.invoice_code)
