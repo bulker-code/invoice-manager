@@ -4,11 +4,13 @@ A command line invoice management tool for small businesses. Manage clients, cre
 
 ## Features
 
-- **Client management** - Add and remove clients with automatic unique client ids to keep them distinct and separate
-- **Line-item invoices** - Line items with a date, quantity, and rate
+- **Client management** - Add, edit, and remove clients with automatic unique client ids to keep them distinct and separate
+- **Line-item invoices** - Line items with a date, quantity, and rate, editable after creation
 - **PDF generation** - Professionally formatted PDFs generated automatically when an invoice is added
-- **Invoice codes** - Unique codes generated based on client name and number of invoices sent to them
-- **Revenue filtering by date range** - Calculates revenue of invoices paid within date range (inclusive)
+- **Invoice codes** - Permanent unique codes generated per client, based on client initials and a running count - never reused or renumbered, even if an invoice is later voided
+- **Voiding, not deleting** - Cancel an invoice without losing its number or record; permanent deletion is still available separately
+- **Overdue tracking** - Filter unpaid invoices and totals down to only what's actually past its due date
+- **CSV export** - Export invoices to CSV for accountant handoff or reporting, filterable by client, paid status, issue date, and paid date
 - **Financial year folder organisation** - Auto-creates folder path in destination to categorise invoices by financial year
 
 
@@ -38,6 +40,12 @@ python invoice_cli.py add-client --name "Jane Smith" --email jane@example.com --
 
 ```
 python invoice_cli.py remove-client --client-id 1
+```
+
+**edit-client** - Updates a client's name, email, phone, and/or address. Only the fields you pass are changed.
+
+```
+python invoice_cli.py edit-client --client-id 1 --phone 0499999999
 ```
 
 **show-clients** - Shows table of all current clients
@@ -101,10 +109,11 @@ python invoice_cli.py show-all-invoices
 |      2 | 001BJ    | Bob Jones  | 2026-06-15 | $135.00 |    0 |            |      0 |
 +--------+----------+------------+------------+---------+------+------------+--------+
 ```
-**show-unpaid-invoices** - Shows table of all unpaid invoices
+**show-unpaid-invoices** - Shows table of all unpaid, non-voided invoices. Add `--overdue` to only show ones past their due date.
 
 ```
 python invoice_cli.py show-unpaid-invoices
+python invoice_cli.py show-unpaid-invoices --overdue
 ```
 ```
 +--------+------------+------------+---------+
@@ -135,10 +144,11 @@ python invoice_cli.py show-invoice-items --invoice-code 001JS
 python invoice_cli.py mark-paid --invoice-code 001JS --paid-date 2026-07-09
 ```
 
-**total-unpaid** - Shows total of unpaid, non-voided invoices for a client
+**total-unpaid** - Shows total of unpaid, non-voided invoices for a client. Add `--overdue` to only total invoices past their due date.
 
 ```
 python invoice_cli.py total-unpaid --client-id 1
+python invoice_cli.py total-unpaid --client-id 1 --overdue
 ```
 
 **generate-pdf** - Generates a new pdf for an existing invoice
