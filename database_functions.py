@@ -158,7 +158,7 @@ def edit_client(client_id, name=None, email=None, phone=None, address=None):
     if address is not None:
         updates.append("address = ?")
         params.append(address)
-        
+
     if not updates:
         print("Nothing to update")
         return
@@ -469,7 +469,7 @@ def export_csv(issue_from=None, issue_to=None, paid_from=None, paid_to=None, pai
         ORDER BY invoices.due_date
     """, params)
     rows = cursor.fetchall()
-    total = sum(row[4] for row in rows)
+    total = sum(row[5] for row in rows)
     export_name = f'revenue_export_{date.today().isoformat()}.csv'
     try:
         with open(export_name, "w", newline="", encoding="utf-8") as csv_file:
