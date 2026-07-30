@@ -1,6 +1,6 @@
 # INVOICE CLI
 
-Built so I could check whether an invoice has been paid, and what's on it, without digging back through the original PDF every time.
+Built for my support work business, so I could check whether an invoice has been paid, and what's on it, without digging back through the original PDF every time.
 
 A command line invoice management tool for small businesses. Manage clients, create and send professional PDF invoices, track payments, and calculate revenue of a given time period. Built as a personal project to manage invoicing for my support work business.
 
