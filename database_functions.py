@@ -389,8 +389,11 @@ def mark_paid(invoice_code, paid_date):
 
 def total_unpaid(client_id, overdue=False):
     conditions = ["invoices.paid = 0", "invoices.voided = 0", "invoices.client_id = ?"]
+    print_statement = " "
     if overdue:
         conditions.append("invoices.due_date < date('now')")
+        print_statement = " and overdue"
+        
     where_clause = "WHERE " + " AND ".join(conditions)
 
     conn = sqlite3.connect("invoices.db")
@@ -408,7 +411,7 @@ def total_unpaid(client_id, overdue=False):
     total_unpaid = result if result is not None else 0
     conn.commit()
     conn.close()
-    print(f"Total of unpaid invoices for client {client_id} ({client_name}) is: ${total_unpaid}")
+    print(f"Total of unpaid{print_statement} invoices for client {client_id} ({client_name}) is: ${total_unpaid}")
 
 def get_invoice_data(invoice_code):
     conn =sqlite3.connect("invoices.db")
