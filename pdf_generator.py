@@ -8,7 +8,7 @@ from reportlab.lib import colors
 import numpy as np
 import os
 from datetime import date
-from config import YOUR_NAME, YOUR_ADDRESS, YOUR_PHONE, YOUR_EMAIL, YOUR_ABN, YOUR_BANK, YOUR_BSB, YOUR_ACC, BASE_PATH
+from config import YOUR_NAME, YOUR_ADDRESS, YOUR_PHONE, YOUR_EMAIL, YOUR_ABN, YOUR_BANK, YOUR_BSB, YOUR_ACC, BASE_PATH, BASE_PATH_LAPTOP
 
 def format_date(date_str):
     d = date.fromisoformat(date_str)
@@ -40,7 +40,7 @@ def generate_invoice_pdf(invoice_code, output_path=None):
     first, last = parts[0], parts[-1]
     fy = get_financial_year(issue_date)
 
-    folder = os.path.join(BASE_PATH, fy, "Invoices", f"INV_{first}_{last}")
+    folder = os.path.join(BASE_PATH_LAPTOP, fy, "Invoices", f"INV_{first}_{last}")
     os.makedirs(folder, exist_ok=True)
 
     if output_path is None:
