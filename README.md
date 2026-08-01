@@ -69,7 +69,6 @@ python invoice_cli.py show-clients
 
 ```
 python invoice_cli.py add-invoice-with-items --client-id 1 --issue-date 2026-07-09
-python invoice_cli.py add-invoice-with-items --client-id 1 --issue-date 2026-07-09 --no-pdf
 ```
 <img width="2000" height="2588" alt="image" src="https://github.com/user-attachments/assets/f26f447d-9dc1-4e67-b0a5-d8657bec1f89" />
 
@@ -101,12 +100,10 @@ python invoice_cli.py edit-invoice-item --item-id 12 --quantity 3 --rate 55
 - `--client-id` - only invoices for one client
 - `--paid` - only paid invoices
 - `--unpaid` - only unpaid invoices
-- `--overdue` - only unpaid invoices past their due date
+- `--overdue` - only unpaid invoices past their due date (does not require `--unpaid` flag)
 
 ```
-python invoice_cli.py show-invoices
-python invoice_cli.py show-invoices --unpaid --overdue
-python invoice_cli.py show-invoices --client-id 2 --paid
+python invoice_cli.py show-invoices --client-id 2 --overdue
 ```
 ```
 +--------+----------+------------+------------+------------+---------+------+------------+
