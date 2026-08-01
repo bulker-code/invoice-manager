@@ -1,7 +1,7 @@
 from datetime import date, timedelta, datetime 
 import argparse
 from database_functions import create_tables, add_client, add_invoice_with_items, edit_client, \
-remove_client, void_invoice, edit_invoice, edit_invoice_item, mark_paid, show_clients, show_all_invoices, show_unpaid_invoices, \
+remove_client, show_invoices, void_invoice, edit_invoice, edit_invoice_item, mark_paid, show_clients, show_all_invoices, show_unpaid_invoices, \
 backup_database, show_invoice_items, total_unpaid, export_csv, remove_invoice
 from pdf_generator import generate_invoice_pdf
 
@@ -61,12 +61,15 @@ p.add_argument("--description", type=str)
 p.add_argument("--quantity", type=float)
 p.add_argument("--rate", type=float)
 
-#show-all-invoices
-# eventually change to show invoices and filter based on client/s, dates, etc
-p = subparsers.add_parser("show-all-invoices")
-
-#show-unpaid-invoices
-p = subparsers.add_parser("show-unpaid-invoices")
+#show-invoices
+p=subparsers.add_parser("show-invoices")
+p.add_argument("--client-id", type=int)
+p.add_argument("--issue-from", type=date.fromisoformat)
+p.add_argument("--issue-to", type=date.fromisoformat)
+p.add_argument("--paid-from", type=date.fromisoformat)
+p.add_argument("--paid-to", type=date.fromisoformat)
+p.add_argument("--paid", action="store_true")
+p.add_argument("--unpaid", action="store_true")
 p.add_argument("--overdue", action="store_true")
 
 #show-invoice-items
@@ -92,8 +95,8 @@ p = subparsers.add_parser("backup-database")
 
 #export-csv
 p = subparsers.add_parser("export-csv")
-p.add_argument("--paid-only", action="store_true")
-p.add_argument("--unpaid-only", action="store_true")
+p.add_argument("--paid", action="store_true")
+p.add_argument("--unpaid", action="store_true")
 p.add_argument("--client-id", type=int)
 p.add_argument("--issue-from", type=date.fromisoformat)
 p.add_argument("--issue-to", type=date.fromisoformat)
@@ -132,11 +135,8 @@ elif args.command == "edit-invoice":
 elif args.command == "edit-invoice-item":
     edit_invoice_item(item_id=args.item_id, item_date=args.item_date, description=args.description, quantity=args.quantity, rate=args.rate)
 
-elif args.command == "show-all-invoices":
-    show_all_invoices()
-   
-elif args.command == "show-unpaid-invoices":
-    show_unpaid_invoices(overdue=args.overdue)
+elif args.command == "show-invoices":
+    show_invoices(client_id=args.client_id, paid=args.paid, unpaid=args.unpaid, overdue=args.overdue,)#issue_from=args.issue_from, issue_to=args.issue_to, paid_from=args.paid_from, paid_to=args.paid_to,)
 
 elif args.command == "show-invoice-items":
     show_invoice_items(args.invoice_code)
@@ -154,4 +154,4 @@ elif args.command == "backup-database":
     backup_database()
 
 elif args.command == "export-csv":
-    export_csv(issue_from=args.issue_from, issue_to=args.issue_to, paid_from=args.paid_from, paid_to=args.paid_to, paid_only=args.paid_only, unpaid_only=args.unpaid_only, client_id=args.client_id)
+    export_csv(issue_from=args.issue_from, issue_to=args.issue_to, paid_from=args.paid_from, paid_to=args.paid_to, paid_only=args.paid, unpaid_only=args.unpaid, client_id=args.client_id)

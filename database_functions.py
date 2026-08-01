@@ -316,30 +316,21 @@ def edit_invoice_item(item_id, item_date=None, description=None, quantity=None, 
     conn.commit()
     conn.close()
     print(f"Invoice {item_id} updated")
-          
-def show_all_invoices():
-    conn = sqlite3.connect("invoices.db")
-    cursor = conn.cursor()
-    cursor.execute("""
-    SELECT invoices.id, invoices.code, clients.name, invoices.issue_date, SUM(invoice_items.quantity * invoice_items.rate) AS total, invoices.paid, invoices.paid_date, invoices.voided
-    FROM invoices
-    JOIN clients ON invoices.client_id = clients.id
-    JOIN invoice_items ON invoice_items.invoice_id = invoices.id
-    WHERE invoices.voided = 0
-    GROUP BY invoices.id
-    ORDER BY invoices.due_date
-    """
-    )
-    rows = cursor.fetchall()
-    conn.commit()
-    conn.close()
-    headers = ["ID", "INV Code", "Client Name", "Issue Date", "TOTAL", "Paid", "Paid_Date", "voided"]
-    print(tabulate.tabulate(rows, headers=headers, tablefmt="grid"))
 
-def show_unpaid_invoices(overdue=False):
-    conditions = ["invoices.paid = 0", "invoices.voided = 0"]
+def show_invoices(unpaid = False, paid=False, overdue=False, client_id=None, ):
+    conditions = ["invoices.voided = 0"]
+    params = []
+    if unpaid:
+        conditions.append("invoices.paid = 0")
+    if paid:
+        conditions.append("invoices.paid = 1")
     if overdue:
+        conditions.append("invoices.paid = 0")
         conditions.append("invoices.due_date < date('now')")
+    if client_id is not None:
+        conditions.append("invoices.client_id = ?")
+        params.append(client_id)
+
     where_clause = "WHERE " + " AND ".join(conditions)
     conn = sqlite3.connect("invoices.db")
     cursor = conn.cursor()
@@ -351,8 +342,7 @@ def show_unpaid_invoices(overdue=False):
     {where_clause}
     GROUP BY invoices.id
     ORDER BY invoices.due_date
-    """
-    )
+    """, tuple(params))
     rows = cursor.fetchall()
     conn.commit()
     conn.close()
@@ -392,8 +382,7 @@ def total_unpaid(client_id, overdue=False):
     print_statement = " "
     if overdue:
         conditions.append("invoices.due_date < date('now')")
-        print_statement = " and overdue"
-        
+        print_statement = "and overdue"
     where_clause = "WHERE " + " AND ".join(conditions)
 
     conn = sqlite3.connect("invoices.db")
@@ -411,7 +400,7 @@ def total_unpaid(client_id, overdue=False):
     total_unpaid = result if result is not None else 0
     conn.commit()
     conn.close()
-    print(f"Total of unpaid{print_statement} invoices for client {client_id} ({client_name}) is: ${total_unpaid}")
+    print(f"Total of unpaid {print_statement} invoices for client {client_id} ({client_name}) is: ${total_unpaid}")
 
 def get_invoice_data(invoice_code):
     conn =sqlite3.connect("invoices.db")
@@ -426,7 +415,6 @@ def get_invoice_data(invoice_code):
     conn.commit()
     conn.close()
     return data
-
 
 def backup_database():
     backup_name = f"invoices_backup_{date.today().isoformat()}.db"
