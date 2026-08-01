@@ -140,7 +140,6 @@ python invoice_cli.py mark-paid --invoice-code 001JS --paid-date 2026-07-09
 
 ```
 python invoice_cli.py total-unpaid --client-id 1
-python invoice_cli.py total-unpaid --client-id 1 --overdue
 ```
 
 **generate-pdf** - Generates a new pdf for an existing invoice
