@@ -64,10 +64,6 @@ p.add_argument("--rate", type=float)
 #show-invoices
 p=subparsers.add_parser("show-invoices")
 p.add_argument("--client-id", type=int)
-p.add_argument("--issue-from", type=date.fromisoformat)
-p.add_argument("--issue-to", type=date.fromisoformat)
-p.add_argument("--paid-from", type=date.fromisoformat)
-p.add_argument("--paid-to", type=date.fromisoformat)
 p.add_argument("--paid", action="store_true")
 p.add_argument("--unpaid", action="store_true")
 p.add_argument("--overdue", action="store_true")
@@ -136,7 +132,7 @@ elif args.command == "edit-invoice-item":
     edit_invoice_item(item_id=args.item_id, item_date=args.item_date, description=args.description, quantity=args.quantity, rate=args.rate)
 
 elif args.command == "show-invoices":
-    show_invoices(client_id=args.client_id, paid=args.paid, unpaid=args.unpaid, overdue=args.overdue,)#issue_from=args.issue_from, issue_to=args.issue_to, paid_from=args.paid_from, paid_to=args.paid_to,)
+    show_invoices(client_id=args.client_id, paid=args.paid, unpaid=args.unpaid, overdue=args.overdue)
 
 elif args.command == "show-invoice-items":
     show_invoice_items(args.invoice_code)
