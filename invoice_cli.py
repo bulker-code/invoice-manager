@@ -1,7 +1,7 @@
 from datetime import date, timedelta, datetime 
 import argparse
 from database_functions import create_tables, add_client, add_invoice_with_items, edit_client, \
-remove_client, show_invoices, void_invoice, edit_invoice, edit_invoice_item, mark_paid, show_clients, show_all_invoices, show_unpaid_invoices, \
+remove_client, show_invoices, void_invoice, edit_invoice, edit_invoice_item, mark_paid, show_clients,\
 backup_database, show_invoice_items, total_unpaid, export_csv, remove_invoice
 from pdf_generator import generate_invoice_pdf
 
