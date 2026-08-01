@@ -73,13 +73,13 @@ python invoice_cli.py add-invoice-with-items --client-id 1 --issue-date 2026-07-
 ```
 <img width="2000" height="2588" alt="image" src="https://github.com/user-attachments/assets/f26f447d-9dc1-4e67-b0a5-d8657bec1f89" />
 
-**remove-invoice** - Permanently deletes an invoice by its database id (see the ID column in `show-all-invoices`). Prefer `void-invoice` unless you actually want the row gone.
+**remove-invoice** - Permanently deletes an invoice by its database id (see the ID column in `show-invoices`). Prefer `void-invoice` unless you actually want the row gone.
 
 ```
 python invoice_cli.py remove-invoice --invoice-id 5
 ```
 
-**void-invoice** - Marks an invoice as voided/cancelled instead of deleting it, so its code is never reused. Voided invoices are excluded from `show-all-invoices`, `show-unpaid-invoices`, `total-unpaid`, and `export-csv`.
+**void-invoice** - Marks an invoice as voided/cancelled instead of deleting it, so its code is never reused. Voided invoices are excluded from `show-invoices`, `total-unpaid`, and `export-csv`.
 
 ```
 python invoice_cli.py void-invoice --invoice-code 001JS
@@ -97,32 +97,25 @@ python invoice_cli.py edit-invoice --invoice-code 001JS --issue-date 2026-07-10 
 python invoice_cli.py edit-invoice-item --item-id 12 --quantity 3 --rate 55
 ```
 
-**show-all-invoices** - Shows tables of all non-voided invoices
+**show-invoices** - Shows a table of non-voided invoices. With no flags, shows everything. Filter down using any combination of:
+- `--client-id` - only invoices for one client
+- `--paid` - only paid invoices
+- `--unpaid` - only unpaid invoices
+- `--overdue` - only unpaid invoices past their due date
 
 ```
-python invoice_cli.py show-all-invoices
+python invoice_cli.py show-invoices
+python invoice_cli.py show-invoices --unpaid --overdue
+python invoice_cli.py show-invoices --client-id 2 --paid
 ```
 ```
-+--------+----------+------------+------------+---------+------+------------+--------+
-| Inv ID | INV Code | Client     | Issue Date | Total   | Paid | Paid Date  | Voided |
-+========+==========+============+============+=========+======+============+========+
-|      1 | 001JS    | Jane Smith | 2026-06-01 | $120.00 |    1 | 2026-06-05 |      0 |
-+--------+----------+------------+------------+---------+------+------------+--------+
-|      2 | 001BJ    | Bob Jones  | 2026-06-15 | $135.00 |    0 |            |      0 |
-+--------+----------+------------+------------+---------+------+------------+--------+
-```
-**show-unpaid-invoices** - Shows table of all unpaid, non-voided invoices. Add `--overdue` to only show ones past their due date.
-
-```
-python invoice_cli.py show-unpaid-invoices
-python invoice_cli.py show-unpaid-invoices --overdue
-```
-```
-+--------+------------+------------+---------+
-| Inv ID | Client     | Due Date   | Total   |
-+========+============+============+=========+
-|      2 | Bob Jones  | 2026-06-22 | $135.00 |
-+--------+------------+------------+---------+
++--------+----------+------------+------------+------------+---------+------+------------+
+| Inv ID | CODE     | Client     | Issue Date | Due Date   | Total   | Paid | Paid Date  |
++========+==========+============+============+============+=========+======+============+
+|      1 | 001JS    | Jane Smith | 2026-06-01 | 2026-06-08 | $120.00 |    1 | 2026-06-05 |
++--------+----------+------------+------------+------------+---------+------+------------+
+|      2 | 001BJ    | Bob Jones  | 2026-06-15 | 2026-06-22 | $135.00 |    0 |            |
++--------+----------+------------+------------+------------+---------+------+------------+
 ```
 
 **show-invoice-items** - Display all line items for a specific invoice
